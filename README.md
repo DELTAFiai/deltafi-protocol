@@ -72,4 +72,6 @@ Reference contracts for the HyperEVM precompile and system contract interfaces. 
 
 ## License
 
-MIT
+Business Source License 1.1 (BUSL-1.1). See [LICENSE](LICENSE) for details.
+
+Source code is publicly available for transparency and review. Production use that competes with DELTAFi is restricted until April 6, 2030, after which the code converts to GPL-2.0.
