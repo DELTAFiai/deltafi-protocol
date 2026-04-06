@@ -54,12 +54,11 @@ Token logos are available in the [`assets/`](./assets) directory:
 }
 ```
 
+## Contract Source
+
+[`contracts/DELTAToken.sol`](../contracts/DELTAToken.sol) -- Standard ERC-20 built on OpenZeppelin (ERC20, Ownable). All tokens minted to deployer at construction. Fixed supply, no additional mint function.
+
 ## Links
 
 - **Website:** [deltafinance.io](https://deltafinance.io)
-- **Protocol:** [deltafi-protocol](https://github.com/DELTAFiai/deltafi-protocol)
 - **Block Explorer:** [View on HyperEVM](https://hyperevmscan.io/token/0x6ce07066584109E5b6b77C3a93136a933741cFbC)
-
-## License
-
-MIT

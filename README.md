@@ -29,6 +29,7 @@ The vault interacts with HyperCore through two mechanisms:
 ```
 contracts/
   DELTAFiVault.sol      -- ERC-4626 vault with L1 spot+perp bridge integration
+  DELTAToken.sol         -- ERC-20 token (fixed supply, OpenZeppelin)
   PriceOracle.sol        -- Redstone-compatible price feed aggregator
   lib/
     L1Read.sol           -- Reference: all HyperEVM L1 read precompiles
