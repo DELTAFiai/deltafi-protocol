@@ -2,32 +2,57 @@
 
 **Autonomous Strategies. On-Chain Proof.**
 
-DELTAFi is an AI-native systematic trading vault built on Hyperliquid. It runs as a permissionless vault — anyone can deposit, and trading is executed entirely by AI with no manual intervention.
+## Overview
 
-## What is DELTAFi?
+DELTAFi Protocol is an ERC-4626 vault deployed on HyperEVM that bridges to Hyperliquid's L1 (HyperCore) to execute combined spot and perpetual positions.
 
-The hedge fund industry manages $4.7 trillion in assets behind closed doors. When the box breaks — Madoff, Lehman, Enron, Wirecard — billions vanish and no one saw it coming because no one could see.
+Native Hyperliquid vaults are perps-only. This vault enables strategies that require both sides of the book -- for example, holding long spot while shorting the corresponding perpetual to capture funding rate carry. Without L1 bridge access, this is not possible from HyperEVM alone.
 
-DELTAFi replaces the fund manager with an autonomous AI system. Every trade is recorded on Hyperliquid's on-chain order book. Glass box, not black box.
+## Architecture
 
-## Strategies
+The vault interacts with HyperCore through two mechanisms:
 
-Seven systematic strategies with near-zero cross-correlation:
+**Reading L1 state** -- HyperEVM exposes precompile addresses that return real-time L1 data: spot balances, perp positions, mark prices, withdrawable amounts, and token metadata. The vault uses these to compute its total asset value (spot + perp) for accurate share pricing.
 
-- **Funding Rate Carry** — Delta-neutral positions collecting hourly funding payments
-- **Market Making** — Order book liquidity provision on Hyperliquid's CLOB
-- **Trend Following** — Sustained directional moves across multiple timeframes
-- **Mean Reversion** — Snapback trades after liquidation cascades and dislocations
-- **Statistical Arbitrage** — Pricing dislocations across 229+ perpetual markets
-- **Event-Driven** — Token unlocks, protocol upgrades, listing events
-- **Prediction Market Making** — Liquidity on HIP-4 binary outcome markets
+**Writing L1 actions** -- The CoreWriter system contract at `0x333...333` accepts encoded action payloads. The vault uses this to execute L1 operations: transferring spot tokens, moving USD between spot and perp accounts, and registering API wallets for automated trading.
 
-## How It Works
+### Flow
 
-1. **Deposit** — USDC into the DELTAFi vault on Hyperliquid. No minimums, no KYC.
-2. **AI Trades** — Autonomous execution across perps, spot, and prediction markets. 24/7.
-3. **Earn** — Profits distributed proportionally. 10% performance fee on profits only.
-4. **Buyback** — Vault profits buy DELTA on the open market.
+1. Authorized participant deposits ERC-20 tokens on HyperEVM
+2. Vault mints ERC-4626 shares and bridges deposited tokens to L1 via the spot bridge
+3. Portfolio manager allocates capital between spot and perp accounts on L1
+4. `totalAssets()` queries L1 precompiles to compute real-time NAV across both accounts
+5. On withdrawal, vault sends spot tokens from L1 back to the bridge for EVM settlement
+
+## Contracts
+
+```
+contracts/
+  DELTAFiVault.sol      -- ERC-4626 vault with L1 spot+perp bridge integration
+  PriceOracle.sol        -- Redstone-compatible price feed aggregator
+  lib/
+    L1Read.sol           -- Reference: all HyperEVM L1 read precompiles
+    CoreWriter.sol       -- Reference: HyperCore raw action writer
+```
+
+### DELTAFiVault.sol
+
+The primary vault contract. Inherits ERC-4626 for standardized deposit/withdraw, with additional access control:
+
+- **Owner** -- Sets fees, authorized participants, portfolio manager, pause state
+- **Portfolio Manager** -- Moves USD between spot and perp accounts on L1
+- **Authorized Participants** -- Whitelisted addresses that can deposit and withdraw
+- **Management Fee** -- Annualized fee (in PPM) accrued as minted shares to the fee receiver
+- **Redemption Fee** -- Deducted from withdrawal amounts (in PPM)
+- **Pause** -- Owner can pause all deposits and withdrawals
+
+### PriceOracle.sol
+
+Maps Hyperliquid token IDs to Redstone price feed addresses. Returns prices in 8-decimal format. Falls back to 1e8 (i.e., $1.00) when no feed is configured.
+
+### lib/
+
+Reference contracts for the HyperEVM precompile and system contract interfaces. These are published for documentation purposes -- the vault inlines the subset of functionality it needs.
 
 ## DELTA Token
 
@@ -37,7 +62,7 @@ Seven systematic strategies with near-zero cross-correlation:
 | Chain | HyperEVM (Chain ID 999) |
 | Standard | ERC-20 |
 | Contract | `0x6ce07066584109E5b6b77C3a93136a933741cFbC` |
-| Buyback | Vault profits → open market DELTA purchases |
+| Buyback | Vault profits used for open market DELTA purchases |
 
 ## Links
 
